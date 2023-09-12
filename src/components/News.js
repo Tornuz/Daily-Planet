@@ -1,101 +1,84 @@
-import React, { Component } from "react";
+import React, { useEffect, useState } from "react";
 import NewsItem from "./NewsItem";
 import Loading from "./Loading";
 import InfiniteScroll from "react-infinite-scroll-component";
 
+function News(props) {
+  const [articles, setArticles] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [totalResults, setTotalResults] = useState(0);
 
-export class News extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      articles: [],
-      page: 1,
-      loading: false,
-      totalResults: 0,
-    };
-    document.title = `${this.capitalizeFirstLetter(
-      this.props.category
-    )} - DailyPlanet`;
-  }
-
-  capitalizeFirstLetter(string) {
+  let capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
-  }
-
-  async update() {
-    this.props.setProgress(0)
-    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.apiKey}&page=${
-      this.state.page}&pageSize=${this.props.pageSize}`;
-
-    this.setState({ loading: true });
-    let data = await fetch(url);
-    this.props.setProgress(30)
-    let newsData = await data.json();
-    this.props.setProgress(70)
-    // console.log(newsData);
-    this.setState({
-      articles: newsData.articles,
-      loading: false,
-      totalResults: newsData.totalResults
-    });
-    this.props.setProgress(100)
-  }
-
-  async componentDidMount() {
-    this.update();
-  }
-
-  fetchMoreData = async() => {
-    
-      const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.apiKey}&page=${this.state.page +1}&pageSize=${this.props.pageSize}`;
-
-    this.setState({ loading: true });
-    let data = await fetch(url);
-    let newsData = await data.json();
-    // console.log(newsData);
-    this.setState({
-      articles: this.state.articles.concat(newsData.articles),
-      loading: false,
-      totalResults: newsData.totalResults,
-      page: this.state.page +1
-    });
   };
 
+  
+      const updateNews = async () => {
+        props.setProgress(10);
+        const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page}&pageSize=${props.pageSize}`;
+        setLoading(true);
+        let data = await fetch(url);
+        props.setProgress(30);
+        let newsData = await data.json();
+        props.setProgress(70);
+        // console.log(newsData);
+        setArticles(newsData.articles);
+        setLoading(false);
+        setTotalResults(newsData.totalResults);
+        props.setProgress(100);
+      };
 
-  render() {
-    return (
-      <>
-        <h1 className="text-center my-4">
-          Daily Planet - Top {this.capitalizeFirstLetter(this.props.category)}{" "}
-          Headlines
-        </h1>
-        <InfiniteScroll
-          dataLength={this.state.articles.length}
-          next={this.fetchMoreData}
-          hasMore={this.state.articles.length !== this.state.totalResults}
-          loader={<Loading />}
-        >
-        {this.state.loading && <Loading />}
+  useEffect(() => {
+      document.title = `${capitalizeFirstLetter(props.category)} - DailyPlanet`;
+    updateNews();
+    // eslint-disable-next-line
+  }, []);
+
+
+  const fetchMoreData = async () => {   
+    const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page +1}&pageSize=${props.pageSize}`;
+    let data = await fetch(url);
+    let newsData = await data.json()
+    setArticles(articles.concat(newsData.articles))
+    setTotalResults(newsData.totalResults)
+    setPage(page+1)
+  };
+
+  return (
+    <>
+      <h1 className="text-center" style={{marginTop: '90px'}}>
+        Daily Planet - Top {capitalizeFirstLetter(props.category)} Headlines
+      </h1>
+      <InfiniteScroll
+        dataLength={articles.length}
+        next={fetchMoreData}
+        hasMore={articles.length !== totalResults}
+        loader={<Loading />}
+      >
+        {loading && <Loading />}
         <div className="container">
-        <div className="row">
-          {this.state.articles.map((e) => {
+          <div className="row">
+            {articles.map((e) => {
               return (
                 <div key={e.url} className="col-md-4 my-1">
-                  <NewsItem title={e.title} description={e.description}
-                    imgUrl={e.urlToImage} newsUrl={e.url}
-                    author={e.author} date={e.publishedAt}
+                  <NewsItem
+                    title={e.title}
+                    description={e.description}
+                    imgUrl={e.urlToImage}
+                    newsUrl={e.url}
+                    author={e.author}
+                    date={e.publishedAt}
                     source={e.source.name}
                   />
                 </div>
               );
             })}
+          </div>
         </div>
-        </div>
-
-        </InfiniteScroll>
-        </>
-    );
-  }
+      </InfiniteScroll>
+    </>
+  );
 }
 
 export default News;

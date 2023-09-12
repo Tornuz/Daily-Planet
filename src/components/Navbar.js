@@ -1,12 +1,11 @@
 import { Nav, Navbar } from "react-bootstrap";
-import React, { Component } from "react";
+import React from "react";
 import { LinkContainer } from "react-router-bootstrap";
 
-export class NavbarHome extends Component {
-  render() {
+export default function NavbarHome () {
     return (
       <div>
-        <Navbar expand="lg" className="bg-body-tertiary">
+        <Navbar expand="lg" className="fixed-top bg-body-tertiary">
           <Navbar.Brand href="/" className="mx-4">
             Daily-Planet
           </Navbar.Brand>
@@ -37,6 +36,4 @@ export class NavbarHome extends Component {
       </div>
     );
   }
-}
 
-export default NavbarHome;
